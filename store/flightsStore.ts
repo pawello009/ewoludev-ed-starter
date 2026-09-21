@@ -5,6 +5,7 @@ interface FiltersState {
   terminal: Terminal | 'All';
   airline: string;
   status: FlightStatus | 'All';
+  destination: string;
 }
 
 interface FlightsStore {
@@ -24,6 +25,7 @@ export const useFlightsStore = create<FlightsStore>((set) => ({
     terminal: 'All',
     airline: 'All',
     status: 'All',
+    destination: 'All',
   },
 
   setFlights: (flights) => set({ flights }),
@@ -52,6 +54,13 @@ export function selectFilteredFlights(state: FlightsStore): Flight[] {
     if (filters.terminal !== 'All' && f.terminal !== filters.terminal) return false;
     if (filters.airline !== 'All' && f.airline !== filters.airline) return false;
     if (filters.status !== 'All' && f.status !== filters.status) return false;
+    if (filters.destination !== 'All' && f.destination !== filters.destination) return false;
     return true;
   });
+}
+
+export function selectDestinations(state: FlightsStore): string[] {
+  return [...new Set(state.flights.map((f) => f.destination))].sort((a, b) =>
+    a.localeCompare(b),
+  );
 }

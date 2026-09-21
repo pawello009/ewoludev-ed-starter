@@ -4,7 +4,11 @@ import { useEffect } from 'react';
 import { FlightRow } from './FlightRow';
 import { LiveClock } from './LiveClock';
 import { useShallow } from 'zustand/react/shallow';
-import { useFlightsStore, selectFilteredFlights } from '@/store/flightsStore';
+import {
+  useFlightsStore,
+  selectFilteredFlights,
+  selectDestinations,
+} from '@/store/flightsStore';
 import type { Flight, FlightStatus, Terminal } from '@/types';
 import { ALL_AIRLINES, ALL_STATUSES, ALL_TERMINALS } from '@/types';
 
@@ -15,6 +19,7 @@ interface FlightBoardProps {
 export function FlightBoard({ initialFlights }: FlightBoardProps) {
   const { filters, setFilter, setFlights } = useFlightsStore();
   const flights = useFlightsStore(useShallow(selectFilteredFlights));
+  const destinations = useFlightsStore(useShallow(selectDestinations));
 
   useEffect(() => {
     setFlights(initialFlights);
@@ -61,6 +66,19 @@ export function FlightBoard({ initialFlights }: FlightBoardProps) {
           {ALL_AIRLINES.map((a) => (
             <option key={a} value={a}>
               {a}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filters.destination}
+          onChange={(e) => setFilter('destination', e.target.value)}
+          className="bg-board-row border border-board-border text-board-text text-xs px-3 py-1.5 rounded focus:outline-none focus:border-amber-600"
+        >
+          <option value="All">All Destinations</option>
+          {destinations.map((d) => (
+            <option key={d} value={d}>
+              {d}
             </option>
           ))}
         </select>
