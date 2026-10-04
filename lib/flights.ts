@@ -5,24 +5,44 @@ import type { Flight } from '@/types';
 const dataPath = path.join(process.cwd(), 'data', 'flights.json');
 const seedPath = path.join(process.cwd(), 'data', 'flights.seed.json');
 
+const BOARDING_OPENS_BEFORE_MIN = 25;
+const DEPARTED_AFTER_MIN = 10;
+
+function getDepartureMinutes(flight: Flight): number {
+  const [h, m] = flight.departureTime.split(':').map(Number);
+  return h * 60 + m + (flight.delayMinutes ?? 0);
+}
+
+function getNowMinutes(): number {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+function isDeparted(depMinutes: number, nowMinutes: number): boolean {
+  return nowMinutes > depMinutes + DEPARTED_AFTER_MIN;
+}
+
+function isBoarding(depMinutes: number, nowMinutes: number): boolean {
+  return (
+    nowMinutes >= depMinutes - BOARDING_OPENS_BEFORE_MIN &&
+    !isDeparted(depMinutes, nowMinutes)
+  );
+}
+
+function isDelayed(flight: Flight): boolean {
+  return Boolean(flight.delayMinutes);
+}
+
 function computeFlightStatus(flight: Flight): Flight {
   if (flight.status === 'Cancelled') return flight;
 
-  const now = new Date();
-  const [h, m] = flight.departureTime.split(':').map(Number);
-  const depMinutes = h * 60 + m + (flight.delayMinutes ?? 0);
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const depMinutes = getDepartureMinutes(flight);
+  const nowMinutes = getNowMinutes();
 
-  let status: Flight['status'];
-  if (nowMinutes > depMinutes + 10) {
-    status = 'Departed';
-  } else if (nowMinutes >= depMinutes - 25) {
-    status = 'Boarding';
-  } else if (flight.delayMinutes) {
-    status = 'Delayed';
-  } else {
-    status = 'On Time';
-  }
+  let status: Flight['status'] = 'On Time';
+  if (isDeparted(depMinutes, nowMinutes)) status = 'Departed';
+  else if (isBoarding(depMinutes, nowMinutes)) status = 'Boarding';
+  else if (isDelayed(flight)) status = 'Delayed';
 
   return { ...flight, status };
 }
