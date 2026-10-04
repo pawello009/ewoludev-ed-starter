@@ -11,6 +11,15 @@ RUN if [ -f package-lock.json ]; then \
     echo "No lockfile found." && exit 1; \
   fi
 
+FROM dhi.io/node:24-alpine3.23-dev AS dev
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+CMD ["sh", "-c", "npm run seed && npm run dev"]
+
 FROM dhi.io/node:24-alpine3.23-dev AS builder
 
 # Set working directory
@@ -42,10 +51,8 @@ ENV HOSTNAME="0.0.0.0"
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-# Dane testowe, które są potrzebne do działania aplikacji. 
-# W praktyce, w środowisku produkcyjnym, dane te powinny być 
-# przechowywane w bazie danych lub dostarczane przez API.
-COPY ./data/flights.json ./data/flights.json
+# Seed data for database reset functionality
+COPY ./data/flights.seed.json ./data/flights.seed.json
 
 USER node
 
