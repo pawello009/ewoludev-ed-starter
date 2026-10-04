@@ -43,3 +43,6 @@ tsconfig.tsbuildinfo
 
 # Turbo
 .turbo
+
+# Windows Mark-of-the-Web metadata
+*:Zone.Identifier
